@@ -1,6 +1,9 @@
 import Fuse from "fuse.js";
 import type { ApiPromise as ApiPromiseType } from "@polkadot/api";
 
+const CONNECTION_TIMEOUT_MS = 20000;
+const RPC_TIMEOUT_MS = 15000;
+
 type ChainInfo = {
   chain: string;
   nodeName: string;
@@ -105,6 +108,58 @@ const truncate = (value: string, size = 120) => {
 
 const sanitizeAnchor = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> => {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    const timeoutPromise = new Promise<T>((_, reject) => {
+      timeoutHandle = setTimeout(() => reject(new Error(message)), timeoutMs);
+    });
+
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
+};
+
+const normalizeEndpointInput = (raw: string) => {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return { value: "", error: "Endpoint is required." };
+  }
+
+  let normalized = trimmed;
+
+  // If the app is served on HTTPS, auto-upgrade ws:// inputs to wss://.
+  if (/^ws:\/\//i.test(normalized) && typeof window !== "undefined" && window.location.protocol === "https:") {
+    normalized = normalized.replace(/^ws:\/\//i, "wss://");
+  }
+
+  if (!/^wss?:\/\//i.test(normalized)) {
+    return { value: "", error: "Endpoint must start with ws:// or wss://" };
+  }
+
+  try {
+    const url = new URL(normalized);
+    if (!["ws:", "wss:"].includes(url.protocol)) {
+      return { value: "", error: "Endpoint protocol must be ws:// or wss://" };
+    }
+
+    if (typeof window !== "undefined" && window.location.protocol === "https:" && url.protocol === "ws:") {
+      return {
+        value: "",
+        error: "This site is served over HTTPS. Use a secure wss:// endpoint."
+      };
+    }
+
+    return { value: url.toString(), error: "" };
+  } catch {
+    return { value: "", error: "Endpoint URL is invalid." };
+  }
+};
 
 export const useMetadataExplorer = () => {
   const endpoint = ref("wss://rpc.polkadot.io");
@@ -398,26 +453,45 @@ export const useMetadataExplorer = () => {
   const connectToChain = async () => {
     errorMessage.value = "";
 
-    if (!endpoint.value.startsWith("wss://")) {
-      errorMessage.value = "Endpoint must start with wss://";
+    const normalizedInput = normalizeEndpointInput(endpoint.value);
+    if (normalizedInput.error) {
+      errorMessage.value = normalizedInput.error;
       return;
     }
+
+    endpoint.value = normalizedInput.value;
 
     isLoading.value = true;
 
     try {
       await disconnectCurrent();
 
-      const { ApiPromise, WsProvider } = await import("@polkadot/api");
-      const provider = new WsProvider(endpoint.value);
-      const api = await ApiPromise.create({ provider, noInitWarn: true });
-      await api.isReady;
+      const { cryptoWaitReady } = await import("@polkadot/util-crypto");
+      await withTimeout(
+        cryptoWaitReady(),
+        RPC_TIMEOUT_MS,
+        "Timed out while initializing crypto libraries."
+      );
 
-      const [chain, nodeName, nodeVersion] = await Promise.all([
-        api.rpc.system.chain(),
-        api.rpc.system.name(),
-        api.rpc.system.version()
-      ]);
+      const { ApiPromise, WsProvider } = await import("@polkadot/api");
+      const provider = new WsProvider(endpoint.value, 1000);
+      const api = await withTimeout(
+        ApiPromise.create({ provider, noInitWarn: true }),
+        CONNECTION_TIMEOUT_MS,
+        "Timed out while opening websocket connection."
+      );
+
+      await withTimeout(
+        api.isReady,
+        CONNECTION_TIMEOUT_MS,
+        "Timed out while waiting for node API readiness."
+      );
+
+      const [chain, nodeName, nodeVersion] = await withTimeout(
+        Promise.all([api.rpc.system.chain(), api.rpc.system.name(), api.rpc.system.version()]),
+        RPC_TIMEOUT_MS,
+        "Connected, but system info request timed out."
+      );
 
       apiRef.value = api;
       chainInfo.value = {
@@ -426,10 +500,18 @@ export const useMetadataExplorer = () => {
         nodeVersion: nodeVersion.toString()
       };
 
-      const metadata = api.runtimeMetadata.toJSON() as Record<string, unknown>;
+      const metadata = await withTimeout(
+        Promise.resolve(api.runtimeMetadata.toJSON() as Record<string, unknown>),
+        RPC_TIMEOUT_MS,
+        "Connected, but metadata decoding timed out."
+      );
       metadataJson.value = metadata;
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown connection error";
+      const rawMessage = error instanceof Error ? error.message : "Unknown connection error";
+      const message = /1006|websocket|disconnected|closing/i.test(rawMessage)
+        ? `${rawMessage}. The endpoint may block browser origins, be offline, or require a different websocket URL.`
+        : rawMessage;
+
       errorMessage.value = `Connection failed: ${message}`;
       metadataJson.value = null;
       await disconnectCurrent();
