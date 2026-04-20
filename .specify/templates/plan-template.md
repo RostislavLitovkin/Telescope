@@ -31,7 +31,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Code Quality Gate: Define required lint, type, and test checks that MUST pass
+  before merge.
+- Reuse Gate: Identify existing modules/components to reuse and justify any new
+  abstractions.
+- UX Consistency Gate: Document how interaction, copy, and accessibility stay
+  consistent with existing product patterns.
+- Responsive Gate: Define mobile and desktop breakpoints, expected behavior,
+  and validation approach.
+- Verification Gate: List concrete evidence artifacts required for approval
+  (tests, screenshots, recordings, or equivalent).
 
 ## Project Structure
 

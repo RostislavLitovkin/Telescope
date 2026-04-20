@@ -95,6 +95,20 @@
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
+### Constitution Alignment Requirements *(mandatory)*
+
+- **CAR-001 Code Quality**: Specification MUST define measurable quality gates
+  (linting, typing where applicable, and test expectations) required before
+  merge.
+- **CAR-002 Reusability**: Specification MUST identify reuse opportunities for
+  existing components/modules and justify any new abstraction.
+- **CAR-003 UX Consistency**: Specification MUST define UX behavior consistent
+  with established navigation, language, feedback, and accessibility patterns.
+- **CAR-004 Responsive Behavior**: Specification MUST define mobile and desktop
+  behavior, including breakpoint expectations and acceptance criteria.
+- **CAR-005 Verification Evidence**: Specification MUST define what evidence is
+  required to prove quality and responsive UX readiness.
+
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
@@ -113,6 +127,10 @@
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-005**: [Code quality metric, e.g., "100% of required lint/type/test gates
+  pass in CI"]
+- **SC-006**: [Responsive UX metric, e.g., "Primary user journeys succeed on
+  mobile and desktop without layout breakage"]
 
 ## Assumptions
 
