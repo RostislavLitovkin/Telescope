@@ -1,5 +1,5 @@
 <template>
-  <details class="pallet-panel" open>
+  <details class="pallet-panel">
     <summary>
       <div class="pallet-summary">
         <div class="pallet-title-wrap">
@@ -19,8 +19,12 @@
     </summary>
 
     <div class="pallet-body">
-      <section class="group" v-if="pallet.calls.length">
-        <h4><SquareTerminal :size="14" class="icon" /> Calls</h4>
+      <details class="group" v-if="pallet.calls.length">
+        <summary>
+          <h4><SquareTerminal :size="14" class="icon" /> Calls</h4>
+          <span class="group-count">{{ pallet.calls.length }}</span>
+          <ChevronDown class="icon group-chevron" :size="16" />
+        </summary>
         <div class="item-list">
           <article v-for="item in pallet.calls" :key="`call-${item.name}`" class="item-card">
             <header>
@@ -44,10 +48,14 @@
             </table>
           </article>
         </div>
-      </section>
+      </details>
 
-      <section class="group" v-if="pallet.events.length">
-        <h4><BellRing :size="14" class="icon" /> Events</h4>
+      <details class="group" v-if="pallet.events.length">
+        <summary>
+          <h4><BellRing :size="14" class="icon" /> Events</h4>
+          <span class="group-count">{{ pallet.events.length }}</span>
+          <ChevronDown class="icon group-chevron" :size="16" />
+        </summary>
         <div class="item-list">
           <article v-for="item in pallet.events" :key="`event-${item.name}`" class="item-card">
             <header>
@@ -71,10 +79,14 @@
             </table>
           </article>
         </div>
-      </section>
+      </details>
 
-      <section class="group" v-if="pallet.errors.length">
-        <h4><TriangleAlert :size="14" class="icon" /> Errors</h4>
+      <details class="group" v-if="pallet.errors.length">
+        <summary>
+          <h4><TriangleAlert :size="14" class="icon" /> Errors</h4>
+          <span class="group-count">{{ pallet.errors.length }}</span>
+          <ChevronDown class="icon group-chevron" :size="16" />
+        </summary>
         <div class="item-list">
           <article v-for="item in pallet.errors" :key="`error-${item.name}`" class="item-card">
             <header>
@@ -98,10 +110,14 @@
             </table>
           </article>
         </div>
-      </section>
+      </details>
 
-      <section class="group" v-if="pallet.storage.length">
-        <h4><Database :size="14" class="icon" /> Storage</h4>
+      <details class="group" v-if="pallet.storage.length">
+        <summary>
+          <h4><Database :size="14" class="icon" /> Storage</h4>
+          <span class="group-count">{{ pallet.storage.length }}</span>
+          <ChevronDown class="icon group-chevron" :size="16" />
+        </summary>
         <div class="item-list compact">
           <article v-for="item in pallet.storage" :key="`storage-${item.name}`" class="item-card">
             <header>
@@ -112,10 +128,14 @@
             <p v-if="item.docs" class="item-doc subtle">{{ item.docs }}</p>
           </article>
         </div>
-      </section>
+      </details>
 
-      <section class="group" v-if="pallet.constants.length">
-        <h4><Binary :size="14" class="icon" /> Constants</h4>
+      <details class="group" v-if="pallet.constants.length">
+        <summary>
+          <h4><Binary :size="14" class="icon" /> Constants</h4>
+          <span class="group-count">{{ pallet.constants.length }}</span>
+          <ChevronDown class="icon group-chevron" :size="16" />
+        </summary>
         <div class="item-list compact">
           <article v-for="item in pallet.constants" :key="`constant-${item.name}`" class="item-card">
             <header>
@@ -126,10 +146,14 @@
             <code class="preview">{{ item.valuePreview }}</code>
           </article>
         </div>
-      </section>
+      </details>
 
-      <section class="group" v-if="pallet.associatedTypes.length || pallet.viewFunctions.length">
-        <h4><Shapes :size="14" class="icon" /> Types and View Functions</h4>
+      <details class="group" v-if="pallet.associatedTypes.length || pallet.viewFunctions.length">
+        <summary>
+          <h4><Shapes :size="14" class="icon" /> Types and View Functions</h4>
+          <span class="group-count">{{ pallet.associatedTypes.length + pallet.viewFunctions.length }}</span>
+          <ChevronDown class="icon group-chevron" :size="16" />
+        </summary>
         <div class="item-list compact">
           <article v-for="item in pallet.associatedTypes" :key="`associated-${item.name}`" class="item-card">
             <header>
@@ -146,7 +170,7 @@
             <p v-if="item.docs" class="item-doc">{{ item.docs }}</p>
           </article>
         </div>
-      </section>
+      </details>
     </div>
   </details>
 </template>

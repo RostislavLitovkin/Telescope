@@ -419,15 +419,46 @@ body,
   background: #fcfdff;
 }
 
-.group h4 {
-  margin: 0;
+.group > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  cursor: pointer;
   padding: 0.58rem 0.72rem;
   border-bottom: 1px solid var(--line);
+}
+
+.group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.group h4 {
+  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.34rem;
   font-size: 0.84rem;
   color: #184563;
+}
+
+.group-count {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: #0c527e;
+  background: #d9edff;
+  border-radius: 999px;
+  padding: 0.15rem 0.36rem;
+  font-weight: 700;
+}
+
+.group .group-chevron {
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+.group[open] .group-chevron {
+  transform: rotate(0deg);
 }
 
 .item-list {
